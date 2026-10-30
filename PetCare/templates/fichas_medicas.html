@@ -1,0 +1,30 @@
+{% extends 'petcare/base.html' %}
+
+{% block title %}Fichas Médicas - PetCare{% endblock %}
+
+{% block content %}
+<h2>Fichas Clínicas Digitales</h2>
+
+<div class="card">
+  <h3>Nueva Consulta Médica</h3>
+  <form id="form-ficha">
+    <div class="form-group">
+      <label for="diagnostico">Diagnóstico:</label>
+      <textarea id="diagnostico" rows="3" required></textarea>
+    </div>
+    <div class="form-group">
+      <label for="tratamiento">Tratamiento e Indicaciones:</label>
+      <textarea id="tratamiento" rows="3" required></textarea>
+    </div>
+    <div class="form-group">
+      <label for="receta">Receta Médica:</label>
+      <textarea id="receta" rows="2"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="examenes">Exámenes Solicitados / Adjuntos:</label>
+      <input type="file" id="examenes">
+    </div>
+    <button type="submit" class="btn">Guardar Ficha</button>
+  </form>
+</div>
+{% endblock %}

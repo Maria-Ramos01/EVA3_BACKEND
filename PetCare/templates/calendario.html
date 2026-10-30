@@ -1,0 +1,50 @@
+{% extends 'petcare/base.html' %}
+
+{% block title %}Calendario Veterinario - PetCare{% endblock %}
+
+{% block content %}
+<h2>Agendamiento y Disponibilidad Profesional</h2>
+
+<div class="card">
+  <h3>Agendar Cita</h3>
+  <form id="form-cita">
+    <div class="form-group">
+      <label for="veterinario">Veterinario Asignado:</label>
+      <select id="veterinario">
+        <option>Dr. Roberto Gómez - General</option>
+        <option>Dra. Maria Silva - Cirugía</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="fecha">Fecha y Hora:</label>
+      <input type="datetime-local" id="fecha" required>
+    </div>
+    <button type="submit" class="btn">Reservar Cita</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Agenda Médica</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha/Hora</th>
+        <th>Veterinario</th>
+        <th>Mascota</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-citas">
+      <tr>
+        <td>2026-11-02 10:00</td>
+        <td>Dr. Roberto Gómez</td>
+        <td>Max</td>
+        <td>Confirmada</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+{% block extra_js %}
+  <script src="{% static 'petcare/js/calendar.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'petcare/base.html' %}
+
+{% block title %}Recordatorios - PetCare{% endblock %}
+
+{% block content %}
+<h2>Módulo Automatizado de Recordatorios</h2>
+
+<div class="card">
+  <h3>Programar Recordatorio Preventivo</h3>
+  <form id="form-recordatorio">
+    <div class="form-group">
+      <label for="tipo">Tipo de Recordatorio:</label>
+      <select id="tipo">
+        <option value="vacuna">Vacunación Periodicidad</option>
+        <option value="control">Control Sano</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="fecha_programada">Fecha Programada:</label>
+      <input type="date" id="fecha_programada" required>
+    </div>
+    <button type="submit" class="btn">Programar Alerta Automática</button>
+  </form>
+</div>
+{% endblock %}
