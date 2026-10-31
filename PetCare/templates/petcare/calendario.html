@@ -1,0 +1,128 @@
+{% extends 'petcare/base.html' %}
+{% load static %}
+
+{% block title %}Calendario Veterinario - PetCare{% endblock %}
+
+{% block content %}
+<h2>Agendamiento y Disponibilidad Profesional</h2>
+
+<div class="card">
+  <h3>Agendar Cita Médica</h3>
+  
+  <!-- Selección de Tipo de Paciente -->
+  <div class="form-group" style="margin-bottom: 1.5rem;">
+    <label><strong>Tipo de Paciente:</strong></label>
+    <div style="display: flex; gap: 2rem; margin-top: 0.5rem;">
+      <label style="cursor: pointer;">
+        <input type="radio" name="tipo_paciente" value="antiguo" checked id="radio-antiguo"> Paciente Registrado (Antiguo)
+      </label>
+      <label style="cursor: pointer;">
+        <input type="radio" name="tipo_paciente" value="nuevo" id="radio-nuevo"> Paciente Nuevo
+      </label>
+    </div>
+  </div>
+
+  <form id="form-cita">
+    {% csrf_token %}
+    
+    <!-- SECCIÓN PACIENTE ANTIGUO (Carga datos desde BD) -->
+    <div id="seccion-paciente-antiguo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div class="form-group">
+        <label for="select_mascota">Seleccionar Mascota Registrada:</label>
+        <select id="select_mascota" class="form-control" required>
+          <option value="" disabled selected>-- Busque o seleccione mascota --</option>
+          {% for mascota in mascotas %}
+            <option value="{{ mascota.id }}">{{ mascota.nombre }} (Tutor: {{ mascota.tutor.nombre }} - RUT: {{ mascota.tutor.rut }})</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- SECCIÓN PACIENTE NUEVO (Campos dinámicos de registro completo) -->
+    <div id="seccion-paciente-nuevo" style="display: none; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div class="form-group">
+        <label>Nombre del Tutor:</label>
+        <input type="text" id="nuevo_tutor_nombre" placeholder="Ej: Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label>RUT del Tutor:</label>
+        <input type="text" id="nuevo_tutor_rut" placeholder="Ej: 12.345.678-9">
+      </div>
+      <div class="form-group">
+        <label>Teléfono de Contacto:</label>
+        <input type="tel" id="nuevo_tutor_telefono" placeholder="+56 9 1234 5678">
+      </div>
+      <div class="form-group">
+        <label>Correo Electrónico:</label>
+        <input type="email" id="nuevo_tutor_email" placeholder="tutor@ejemplo.com">
+      </div>
+      <div class="form-group">
+        <label>Nombre de la Mascota:</label>
+        <input type="text" id="nueva_mascota_nombre" placeholder="Ej: Max">
+      </div>
+      <div class="form-group">
+        <label>Especie:</label>
+        <select id="nueva_mascota_especie">
+          <option value="PERRO">Perro</option>
+          <option value="GATO">Gato</option>
+          <option value="OTRO">Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Raza:</label>
+        <input type="text" id="nueva_mascota_raza" placeholder="Ej: Labrador / Mestizo">
+      </div>
+    </div>
+
+    <!-- DATOS DE LA CITA (Comunes para ambos casos) -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+      <div class="form-group">
+        <label for="select_veterinario">Seleccionar Profesional:</label>
+        <select id="select_veterinario" required>
+          <option value="" disabled selected>-- Seleccione un Veterinario --</option>
+          {% for vet in veterinarios %}
+            <option value="{{ vet.id }}">Dr(a). {{ vet.user.first_name }} {{ vet.user.last_name }} ({{ vet.especialidad }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="fecha_hora">Fecha y Hora de Atención:</label>
+        <input type="datetime-local" id="fecha_hora" required>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top: 1rem;">
+      <label for="motivo_consulta">Motivo de Consulta:</label>
+      <input type="text" id="motivo_consulta" placeholder="Ej: Control de rutina / Vacunación" required>
+    </div>
+
+    <button type="submit" class="btn" style="margin-top: 1.5rem;">Reservar Cita</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Agenda Médica</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha/Hora</th>
+        <th>Veterinario</th>
+        <th>Mascota</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-citas">
+      <tr>
+        <td>2026-11-02 10:00</td>
+        <td>Dr. Roberto Gómez</td>
+        <td>Max</td>
+        <td>Confirmada</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+{% block extra_js %}
+  <script src="{% static 'petcare/js/calendar.js' %}"></script>
+{% endblock %}

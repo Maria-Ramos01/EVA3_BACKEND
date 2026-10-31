@@ -4,34 +4,52 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 
+# Proxy Model para filtrar y gestionar Secretarios en Django Admin
+class Secretario(User):
+    class Meta:
+        proxy = True
+        verbose_name = 'Secretario(a)'
+        verbose_name_plural = 'Secretarios(as)'
+
+
 class Tutor(models.Model):
     nombre = models.CharField(max_length=100)
-    apellido = models.CharField(max_length=100)
-    rut = models.CharField(max_length=12, unique=True)
+    apellido = models.CharField(max_length=100, blank=True, default='')
+    rut = models.CharField(max_length=12)
     telefono = models.CharField(max_length=15)
-    email = models.EmailField(unique=True)
-    direccion = models.CharField(max_length=200)
+    email = models.EmailField()
+    direccion = models.CharField(max_length=200, blank=True, default='Sin Registrar')
 
     def __str__(self):
-        return f"{self.nombre} {self.apellido}"
+        return f"{self.nombre} (RUT: {self.rut})"
 
 
 class Mascota(models.Model):
     ESPECIES = [
-        ('CANINO', 'Canino'),
-        ('FELINO', 'Felino'),
-        ('EXOTICO', 'Exótico'),
+        ('PERRO', 'Perro'),
+        ('GATO', 'Gato'),
+        ('OTRO', 'Otro'),
     ]
+    ESTADOS = [
+        ('ACTIVO', 'Activo'),
+        ('INACTIVO', 'Inactivo'),
+    ]
+    SEXOS = [
+        ('MACHO', 'Macho'),
+        ('HEMBRA', 'Hembra'),
+    ]
+
     tutor = models.ForeignKey(Tutor, on_delete=models.CASCADE, related_name='mascotas')
     nombre = models.CharField(max_length=100)
-    especie = models.CharField(max_length=10, choices=ESPECIES)
+    especie = models.CharField(max_length=10, choices=ESPECIES, default='PERRO')
     raza = models.CharField(max_length=100)
-    edad = models.PositiveIntegerField(help_text="Edad en años")
-    peso = models.DecimalField(max_digits=5, decimal_places=2, help_text="Peso en kg")
-    sexo = models.CharField(max_length=10, choices=[('MACHO', 'Macho'), ('HEMBRA', 'Hembra')])
+    edad = models.PositiveIntegerField(default=1)
+    peso = models.DecimalField(max_digits=5, decimal_places=2, default=1.0)
+    sexo = models.CharField(max_length=10, choices=SEXOS, default='MACHO')
+    estado = models.CharField(max_length=10, choices=ESTADOS, default='ACTIVO')
 
     def __str__(self):
-        return f"{self.nombre} ({self.tutor.nombre} {self.tutor.apellido})"
+        return f"{self.nombre} ({self.tutor.nombre})"
 
 
 class Veterinario(models.Model):
@@ -40,7 +58,7 @@ class Veterinario(models.Model):
     telefono = models.CharField(max_length=15)
 
     def __str__(self):
-        return f"Dr(a). {self.user.first_name} {self.user.last_name} - {self.especialidad}"
+        return f"Dr(a). {self.user.first_name} {self.user.last_name}"
 
 
 class Cita(models.Model):
@@ -53,30 +71,11 @@ class Cita(models.Model):
     mascota = models.ForeignKey(Mascota, on_delete=models.CASCADE, related_name='citas')
     veterinario = models.ForeignKey(Veterinario, on_delete=models.CASCADE, related_name='citas')
     fecha_hora = models.DateTimeField()
-    motivo = models.TextField()
+    motivo = models.TextField(default='Consulta general')
     estado = models.CharField(max_length=10, choices=ESTADOS, default='PENDIENTE')
 
-    def clean(self):
-        # Validación de solapamiento de horas por veterinario
-        if self.fecha_hora:
-            inicio_cita = self.fecha_hora
-            fin_cita = self.fecha_hora + timezone.timedelta(minutes=30)
-            
-            citas_traslapadas = Cita.objects.filter(
-                veterinario=self.veterinario,
-                fecha_hora__gte=inicio_cita,
-                fecha_hora__lt=fin_cita
-            ).exclude(id=self.id)
-
-            if citas_traslapadas.exists():
-                raise ValidationError("El profesional ya tiene una cita agendada en ese horario.")
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
-
     def __str__(self):
-        return f"Cita {self.mascota.nombre} - {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
+        return f"Cita #{self.id} - {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
 
 
 class FichaMedica(models.Model):
@@ -93,16 +92,10 @@ class FichaMedica(models.Model):
 
 
 class Recordatorio(models.Model):
-    TIPOS = [
-        ('VACUNA', 'Vacunación'),
-        ('CONTROL', 'Control Periódico'),
-        ('DESPARASITACION', 'Desparasitación'),
-    ]
-    mascota = models.ForeignKey(Mascota, on_delete=models.CASCADE, related_name='recordatorios')
-    tipo = models.CharField(max_length=15, choices=TIPOS)
+    mascota_nombre = models.CharField(max_length=100)
+    tipo = models.CharField(max_length=50)
     fecha_programada = models.DateField()
-    descripcion = models.CharField(max_length=200)
-    completado = models.BooleanField(default=False)
+    estado_notificacion = models.CharField(max_length=50, default='Programado (WhatsApp/Correo)')
 
     def __str__(self):
-        return f"{self.get_tipo_display()} - {self.mascota.nombre} ({self.fecha_programada})"
+        return f"Recordatorio {self.mascota_nombre} - {self.tipo} ({self.fecha_programada})"

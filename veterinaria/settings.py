@@ -77,7 +77,7 @@ ROOT_URLCONF = 'veterinaria.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [os.path.join(BASE_DIR,'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -99,7 +99,7 @@ WSGI_APPLICATION = 'veterinaria.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'petcare_db',
         'USER': 'postgres',         
         'PASSWORD': 'holachao123',       
         'HOST': 'localhost',

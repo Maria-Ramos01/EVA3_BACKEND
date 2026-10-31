@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}PetCare - Gestión Veterinaria{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'petcare/css/styles.css' %}">
+</head>
+<body>
+  <header>
+    <h1>PetCare Clinic</h1>
+    <!-- Menú condicional por JS / Sesión Django -->
+    <nav id="main-nav">
+      {% if user.is_authenticated %}
+        <a href="{% url 'index' %}">Inicio</a>
+        <a href="{% url 'tutores_mascotas' %}">Tutores y Mascotas</a>
+        <a href="{% url 'calendario' %}">Calendario</a>
+        <a href="{% url 'fichas_medicas' %}">Fichas Médicas</a>
+        <a href="{% url 'recordatorios' %}">Recordatorios</a>
+        <a href="{% url 'logout' %}" class="btn" style="background-color: #e53e3e;">Cerrar Sesión</a>
+      {% else %}
+        <span id="nav-protected-links" style="display: none;">
+          <a href="{% url 'index' %}">Inicio</a>
+          <a href="{% url 'tutores_mascotas' %}">Tutores y Mascotas</a>
+          <a href="{% url 'calendario' %}">Calendario</a>
+          <a href="{% url 'fichas_medicas' %}">Fichas Médicas</a>
+          <a href="{% url 'recordatorios' %}">Recordatorios</a>
+        </span>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{% static 'petcare/js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

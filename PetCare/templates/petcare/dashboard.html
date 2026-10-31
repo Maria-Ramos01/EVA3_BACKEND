@@ -1,0 +1,38 @@
+{% extends 'petcare/base.html' %}
+
+{% block title %}Panel de Control - PetCare{% endblock %}
+
+{% block content %}
+<section class="card" style="border-left: 5px solid var(--primary);">
+  <h2>Sesión Iniciada con Éxito</h2>
+  <p>Bienvenido al Panel de Gestión Clínica de PetCare. Seleccione una opción para continuar con las operaciones:</p>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+  
+  <div class="card" style="text-align: center;">
+    <h3>Tutores y Mascotas</h3>
+    <p>Registre nuevos tutores, gestione perfiles de mascotas y actualice información de contacto.</p>
+    <a href="{% url 'tutores_mascotas' %}" class="btn">Gestionar Registro</a>
+  </div>
+
+  <div class="card" style="text-align: center;">
+    <h3>Agendamiento</h3>
+    <p>Revise la disponibilidad completa por profesional y administre la agenda clínica.</p>
+    <a href="{% url 'index' %}" class="btn">Ver Calendario</a>
+  </div>
+
+  <div class="card" style="text-align: center;">
+    <h3>Fichas Médicas</h3>
+    <p>Ingrese diagnósticos, prescripciones de tratamiento, recetas clínicas y exámenes.</p>
+    <a href="{% url 'fichas_medicas' %}" class="btn">Acceder a Fichas</a>
+  </div>
+
+  <div class="card" style="text-align: center;">
+    <h3>Recordatorios</h3>
+    <p>Configure alertas automatizadas para esquemas de vacunación y controles periódicos.</p>
+    <a href="{% url 'recordatorios' %}" class="btn">Ver Recordatorios</a>
+  </div>
+
+</div>
+{% endblock %}
