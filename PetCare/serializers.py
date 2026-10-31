@@ -29,11 +29,14 @@ class TutorSerializer(serializers.ModelSerializer):
 
 
 class VeterinarioSerializer(serializers.ModelSerializer):
-    nombre_completo = serializers.ReadOnlyField(source='user.get_full_name')
+    nombre_completo = serializers.SerializerMethodField()
 
     class Meta:
         model = Veterinario
         fields = '__all__'
+
+    def get_nombre_completo(self, obj):
+        return str(obj)  # Devuelve exactamente la cadena formateada del __str__
 
 
 class CitaSerializer(serializers.ModelSerializer):

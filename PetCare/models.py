@@ -53,29 +53,38 @@ class Mascota(models.Model):
 
 
 class Veterinario(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    especialidad = models.CharField(max_length=100, default='Medicina General')
-    telefono = models.CharField(max_length=15)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    nombre = models.CharField(max_length=100, blank=True, null=True) # En caso de no vincular a User
+    especialidad = models.CharField(max_length=100, default='General')
+    telefono = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
 
     def __str__(self):
-        return f"Dr(a). {self.user.first_name} {self.user.last_name}"
+        # 1. Si tiene el campo nombre directo lleno (Ej: Frambuesa)
+        if self.nombre and self.nombre.strip():
+            return f"Dr(a). {self.nombre} ({self.especialidad})"
+        
+        # 2. Si está vinculado a un usuario de Django con nombre/apellido
+        if self.user and (self.user.first_name or self.user.last_name):
+            nombre_completo = f"{self.user.first_name} {self.user.last_name}".strip()
+            return f"Dr(a). {nombre_completo} ({self.especialidad})"
+        
+        # 3. Si sólo tiene username en User
+        if self.user and self.user.username:
+            return f"Dr(a). {self.user.username} ({self.especialidad})"
 
+        # 4. Alternativa por defecto en caso de no tener nombre asignado
+        return f"Dr(a). Veterinario #{self.id} ({self.especialidad})"
 
 class Cita(models.Model):
-    ESTADOS = [
-        ('PENDIENTE', 'Pendiente'),
-        ('CONFIRMADA', 'Confirmada'),
-        ('CANCELADA', 'Cancelada'),
-        ('REALIZADA', 'Realizada'),
-    ]
     mascota = models.ForeignKey(Mascota, on_delete=models.CASCADE, related_name='citas')
     veterinario = models.ForeignKey(Veterinario, on_delete=models.CASCADE, related_name='citas')
     fecha_hora = models.DateTimeField()
-    motivo = models.TextField(default='Consulta general')
-    estado = models.CharField(max_length=10, choices=ESTADOS, default='PENDIENTE')
+    motivo = models.CharField(max_length=255, blank=True)
+    estado = models.CharField(max_length=20, default='PENDIENTE')
 
     def __str__(self):
-        return f"Cita #{self.id} - {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
+        return f"Cita: {self.mascota.nombre} con {self.veterinario} ({self.fecha_hora})"
 
 
 class FichaMedica(models.Model):
@@ -92,10 +101,10 @@ class FichaMedica(models.Model):
 
 
 class Recordatorio(models.Model):
-    mascota_nombre = models.CharField(max_length=100)
-    tipo = models.CharField(max_length=50)
-    fecha_programada = models.DateField()
-    estado_notificacion = models.CharField(max_length=50, default='Programado (WhatsApp/Correo)')
+    mascota = models.ForeignKey(Mascota, on_delete=models.CASCADE, related_name='recordatorios', null=True, blank=True)
+    tipo = models.CharField(max_length=100)
+    fecha_programada = models.DateTimeField(null=True, blank=True)
+    estado = models.CharField(max_length=50, default='PENDIENTE')
 
     def __str__(self):
-        return f"Recordatorio {self.mascota_nombre} - {self.tipo} ({self.fecha_programada})"
+        return f"Recordatorio: {self.tipo} - {self.mascota}"

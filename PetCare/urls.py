@@ -27,10 +27,11 @@ urlpatterns = [
     # Ruta Web -> Devuelve la plantilla HTML
     path('tutor-mascotas/', views.tutores_mascotas_view, name='tutores_mascotas'),
     path('api/tutores/<int:pk>/', views.editar_tutor_api, name='editar_tutor_api'),
+    path('api/agendar-cita/', views.agendar_cita_api, name='agendar_cita_api'),
+    path('api/citas/<int:pk>/estado/', views.cambiar_estado_cita_api, name='cambiar_estado_cita_api'),
     # Ruta API -> Procesa los datos enviados por la petición AJAX / fetch
     path('api/registrar-tutor-mascotas/', views.registrar_tutor_mascotas_api, name='api_registrar_tutor_mascotas'),
-    path('calendario/', views.calendario_view, name='calendario'),
     path('fichas-medicas/', views.fichas_medicas, name='fichas_medicas'),
-    path('recordatorios/', views.recordatorios, name='recordatorios'),
+    path('api/recordatorios/', views.crear_recordatorio_api, name='crear_recordatorio_api'),
     path('api/', include(router.urls)),
 ]

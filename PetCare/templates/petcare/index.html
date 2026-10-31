@@ -4,13 +4,13 @@
 {% block title %}Inicio y Agenda Médica - PetCare{% endblock %}
 
 {% block content %}
-<section class="card" style="text-align: center; padding: 2rem;">
+<section class="card" style="text-align: center; padding: 2rem; margin-bottom: 1.5rem;">
   <h2>Sistema de Gestión Clínica PetCare</h2>
   <p>Consulte la disponibilidad de los profesionales veterinarios y gestione el agendamiento de citas en tiempo real.</p>
 </section>
 
 <!-- Módulo 1: Formulario para Agendar Cita Médica -->
-<div class="card">
+<div class="card" style="margin-bottom: 1.5rem;">
   <h3>Agendar Cita Médica</h3>
   
   <!-- Selección de Tipo de Paciente (Antiguo vs Nuevo) -->
@@ -33,7 +33,7 @@
     <div id="seccion-paciente-antiguo">
       <div class="form-group">
         <label for="select_mascota">Mascota Registrada:</label>
-        <select id="select_mascota" required>
+        <select id="select_mascota" class="form-control" style="width: 100%; padding: 0.5rem;" required>
           <option value="" disabled selected>-- Seleccione Mascota / Tutor --</option>
           {% for m in mascotas %}
             <option value="{{ m.id }}">{{ m.nombre }} (Tutor: {{ m.tutor.nombre }} - RUT: {{ m.tutor.rut }})</option>
@@ -48,33 +48,33 @@
     <div id="seccion-paciente-nuevo" style="display: none; grid-template-columns: 1fr 1fr; gap: 1rem;">
       <div class="form-group">
         <label for="nuevo_tutor_nombre">Nombre del Tutor:</label>
-        <input type="text" id="nuevo_tutor_nombre" placeholder="Ej: Juan Pérez">
+        <input type="text" id="nuevo_tutor_nombre" class="form-control" placeholder="Ej: Juan Pérez">
       </div>
       <div class="form-group">
         <label for="nuevo_tutor_rut">RUT del Tutor:</label>
-        <input type="text" id="nuevo_tutor_rut" placeholder="Ej: 12.345.678-9">
+        <input type="text" id="nuevo_tutor_rut" class="form-control" placeholder="Ej: 12.345.678-9">
       </div>
       <div class="form-group">
         <label for="nuevo_tutor_telefono">Teléfono de Contacto:</label>
-        <input type="tel" id="nuevo_tutor_telefono" placeholder="+56 9 1234 5678">
+        <input type="tel" id="nuevo_tutor_telefono" class="form-control" placeholder="+56 9 1234 5678">
       </div>
       <div class="form-group">
         <label for="nuevo_tutor_email">Correo Electrónico:</label>
-        <input type="email" id="nuevo_tutor_email" placeholder="tutor@ejemplo.com">
+        <input type="email" id="nuevo_tutor_email" class="form-control" placeholder="tutor@ejemplo.com">
       </div>
       <div class="form-group">
         <label for="nueva_mascota_nombre">Nombre de la Mascota:</label>
-        <input type="text" id="nueva_mascota_nombre" placeholder="Ej: Max">
+        <input type="text" id="nueva_mascota_nombre" class="form-control" placeholder="Ej: Max">
       </div>
       <div class="form-group">
         <label for="nueva_mascota_especie">Especie / Raza:</label>
         <div style="display: flex; gap: 0.5rem;">
-          <select id="nueva_mascota_especie" style="padding: 0.5rem;">
+          <select id="nueva_mascota_especie" class="form-control" style="padding: 0.5rem;">
             <option value="PERRO">Perro</option>
             <option value="GATO">Gato</option>
             <option value="OTRO">Otro</option>
           </select>
-          <input type="text" id="nueva_mascota_raza" placeholder="Raza (Ej: Mestizo)" style="flex: 1;">
+          <input type="text" id="nueva_mascota_raza" class="form-control" placeholder="Raza (Ej: Mestizo)" style="flex: 1;">
         </div>
       </div>
     </div>
@@ -83,113 +83,163 @@
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
       <div class="form-group">
         <label for="select_veterinario">Seleccionar Profesional:</label>
-        <select id="select_veterinario" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" required>
+        <select id="select_veterinario" class="form-control" style="width: 100%; padding: 0.5rem;" required>
           <option value="" disabled selected>-- Seleccione un Veterinario --</option>
           {% for vet in veterinarios %}
-            <option value="{{ vet.id }}">Dr(a). {{ vet.user.first_name }} {{ vet.user.last_name }} ({{ vet.especialidad }})</option>
+            <option value="{{ vet.id }}">{{ vet }}</option>
+          {% empty %}
+            <option value="" disabled>No hay veterinarios registrados</option>
           {% endfor %}
         </select>
       </div>
 
       <div class="form-group">
         <label for="fecha_hora">Fecha y Hora de Atención:</label>
-        <input type="datetime-local" id="fecha_hora" required style="width: 100%; padding: 0.45rem; border: 1px solid #ccc; border-radius: 4px;">
+        <input type="datetime-local" id="fecha_hora" class="form-control" required style="width: 100%; padding: 0.45rem; border: 1px solid #ccc; border-radius: 4px;">
       </div>
     </div>
 
     <div class="form-group" style="margin-top: 1rem;">
       <label for="motivo_consulta">Motivo de Consulta:</label>
-      <input type="text" id="motivo_consulta" placeholder="Ej: Control de rutina / Vacunación" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+      <input type="text" id="motivo_consulta" class="form-control" placeholder="Ej: Control de rutina / Vacunación" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
     </div>
 
     <button type="submit" class="btn" style="margin-top: 1.25rem;">Reservar Cita</button>
   </form>
 </div>
 
-<!-- Módulo 2: Calendario y Confirmación/Cancelación de Citas -->
-<div class="card">
+<!-- Módulo 2: Tabla de Citas Agendadas y Disponibilidad -->
+<div class="card" style="margin-bottom: 1.5rem;">
   <h3>Calendario de Citas y Disponibilidad</h3>
-  <table>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
     <thead>
-      <tr>
-        <th>Fecha y Hora</th>
-        <th>Profesional</th>
-        <th>Mascota / Tutor</th>
-        <th>Contacto</th>
-        <th>Estado</th>
-        <th>Acciones de Hora</th>
+      <tr style="background-color: #edf2f7; text-align: left;">
+        <th style="padding: 0.75rem;">Fecha y Hora</th>
+        <th style="padding: 0.75rem;">Profesional</th>
+        <th style="padding: 0.75rem;">Mascota / Tutor</th>
+        <th style="padding: 0.75rem;">Contacto</th>
+        <th style="padding: 0.75rem;">Estado</th>
+        <th style="padding: 0.75rem;">Acciones de Hora</th>
       </tr>
     </thead>
-    <tbody id="tabla-citas">
-      <tr>
-        <td>2026-11-02 10:00</td>
-        <td>Dr. Roberto Gómez - General</td>
-        <td>Max (Tutor: Juan Pérez)</td>
-        <td>+56 9 8765 4321</td>
-        <td><span class="estado-tag" style="color: #2b6cb0; font-weight: bold;">Pendiente</span></td>
-        <td>
-          <button class="btn btn-confirmar" style="background-color: #38a169; padding: 0.25rem 0.5rem; font-size: 0.85rem;">Confirmar</button>
-          <button class="btn btn-cancelar" style="background-color: #e53e3e; padding: 0.25rem 0.5rem; font-size: 0.85rem;">Cancelar</button>
+    <tbody id="tabla-citas-body">
+      {% for cita in citas %}
+      <tr style="border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 0.75rem;">{{ cita.fecha_hora|date:"Y-m-d H:i" }}</td>
+        <td style="padding: 0.75rem;">{{ cita.veterinario }}</td>
+        <td style="padding: 0.75rem;">{{ cita.mascota.nombre }} (Tutor: {{ cita.mascota.tutor.nombre }})</td>
+        <td style="padding: 0.75rem;">{{ cita.mascota.tutor.telefono }}</td>
+        <td style="padding: 0.75rem;">
+          {% if cita.estado == 'CONFIRMADA' %}
+            <strong style="color: #38a169;">Confirmada</strong>
+          {% elif cita.estado == 'CANCELADA' %}
+            <strong style="color: #e53e3e;">Cancelada</strong>
+          {% else %}
+            <strong style="color: #3182ce;">Pendiente</strong>
+          {% endif %}
+        </td>
+        <td style="padding: 0.75rem;">
+          <button type="button" class="btn-estado" data-id="{{ cita.id }}" data-estado="CONFIRMADA" style="background: #38a169; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer;">Confirmar</button>
+          <button type="button" class="btn-estado" data-id="{{ cita.id }}" data-estado="CANCELADA" style="background: #e53e3e; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer;">Cancelar</button>
         </td>
       </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 1rem;">No hay citas agendadas.</td>
+      </tr>
+      {% endfor %}
     </tbody>
   </table>
 </div>
 
-<!-- Módulo 3: Módulo Automatizado de Recordatorios -->
-<div class="card">
+<!-- Módulo Automatizado de Recordatorios -->
+<div class="card" id="modulo-recordatorios">
   <h3>Módulo Automatizado de Recordatorios Preventivos</h3>
   <form id="form-recordatorio" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+    {% csrf_token %}
     <div class="form-group" style="margin-bottom: 0;">
       <label for="rec_mascota">Mascota / Paciente:</label>
-      <input type="text" id="rec_mascota" placeholder="Ej: Max" required>
-    </div>
-    <div class="form-group" style="margin-bottom: 0;">
-      <label for="rec_tipo">Tipo de Recordatorio:</label>
-      <select id="rec_tipo" required>
-        <option value="Vacunación">Vacunación Periodicidad</option>
-        <option value="Control Periódico">Control Periódico / Sano</option>
-        <option value="Desparasitación">Desparasitación Interna/Externa</option>
+      <select id="rec_mascota" class="form-control" style="width: 100%; padding: 0.5rem;" required>
+        <option value="" disabled selected>-- Seleccione Mascota --</option>
+        {% for m in mascotas %}
+          <option value="{{ m.id }}">{{ m.nombre }} (Tutor: {{ m.tutor.nombre }})</option>
+        {% endfor %}
       </select>
     </div>
+
+    <div class="form-group" style="margin-bottom: 0;">
+      <label for="rec_tipo">Tipo de Recordatorio:</label>
+      <select id="rec_tipo" class="form-control" style="width: 100%; padding: 0.5rem;" required>
+        <option value="Vacunación Periodicidad">Vacunación Periodicidad</option>
+        <option value="Control Periódico / Sano">Control Periódico / Sano</option>
+        <option value="Desparasitación Interna/Externa">Desparasitación Interna/Externa</option>
+      </select>
+    </div>
+
     <div class="form-group" style="margin-bottom: 0;">
       <label for="rec_fecha">Fecha Programada:</label>
-      <input type="date" id="rec_fecha" required>
+      <input type="date" id="rec_fecha" class="form-control" style="width: 100%; padding: 0.45rem;" required>
     </div>
-    <button type="submit" class="btn" style="background-color: #d69e2e;">Programar Recordatorio</button>
+
+    <button type="submit" class="btn" style="background-color: #d69e2e; color: white;">Programar Recordatorio</button>
   </form>
 
-  <table style="margin-top: 1.5rem;">
+  <table style="width: 100%; border-collapse: collapse; margin-top: 1.5rem;">
     <thead>
-      <tr>
-        <th>Mascota</th>
-        <th>Tipo</th>
-        <th>Fecha Programada</th>
-        <th>Estado Notificación</th>
+      <tr style="background-color: #edf2f7; text-align: left;">
+        <th style="padding: 0.75rem;">Mascota</th>
+        <th style="padding: 0.75rem;">Tipo</th>
+        <th style="padding: 0.75rem;">Fecha Programada</th>
+        <th style="padding: 0.75rem;">Estado Notificación</th>
       </tr>
     </thead>
-    <tbody id="tabla-recordatorios">
-      <tr>
-        <td>Max</td>
-        <td>Vacunación Antirrábica</td>
-        <td>2026-11-15</td>
-        <td><span style="color: #d69e2e; font-weight: bold;">Programado (WhatsApp/Correo)</span></td>
+    <tbody id="tabla-recordatorios-body">
+      {% for rec in recordatorios %}
+      <tr style="border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 0.75rem;">{{ rec.mascota.nombre }}</td>
+        <td style="padding: 0.75rem;">{{ rec.tipo }}</td>
+        <td style="padding: 0.75rem;">{{ rec.fecha_programada|date:"Y-m-d" }}</td>
+        <td style="padding: 0.75rem;">
+          <span style="color: #d69e2e; font-weight: bold;">Programado (WhatsApp/Correo)</span>
+        </td>
       </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 1rem;">No hay recordatorios programados.</td>
+      </tr>
+      {% endfor %}
     </tbody>
   </table>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-  <script src="{% static 'petcare/js/calendar.js' %}"></script>
-  <script>
+<script>
 document.addEventListener('DOMContentLoaded', () => {
   const radioAntiguo = document.getElementById('radio-antiguo');
   const radioNuevo = document.getElementById('radio-nuevo');
   const seccionAntiguo = document.getElementById('seccion-paciente-antiguo');
   const seccionNuevo = document.getElementById('seccion-paciente-nuevo');
   const selectMascota = document.getElementById('select_mascota');
+  const formCita = document.getElementById('form-cita');
+  const tablaBody = document.getElementById('tabla-citas-body');
 
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Alternar entre Paciente Antiguo y Nuevo
   if (radioAntiguo && radioNuevo) {
     radioAntiguo.addEventListener('change', () => {
       seccionAntiguo.style.display = 'block';
@@ -203,6 +253,130 @@ document.addEventListener('DOMContentLoaded', () => {
       selectMascota.required = false;
     });
   }
+
+  // Agendar Cita
+  if (formCita) {
+    formCita.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const esNuevo = radioNuevo.checked;
+
+      let payload = {
+        tipo_paciente: esNuevo ? 'NUEVO' : 'ANTIGUO',
+        veterinario_id: document.getElementById('select_veterinario').value,
+        fecha_hora: document.getElementById('fecha_hora').value,
+        motivo: document.getElementById('motivo_consulta').value
+      };
+
+      if (esNuevo) {
+        payload.tutor = {
+          nombre: document.getElementById('nuevo_tutor_nombre').value,
+          rut: document.getElementById('nuevo_tutor_rut').value,
+          telefono: document.getElementById('nuevo_tutor_telefono').value,
+          email: document.getElementById('nuevo_tutor_email').value
+        };
+        payload.mascota = {
+          nombre: document.getElementById('nueva_mascota_nombre').value,
+          especie: document.getElementById('nueva_mascota_especie').value,
+          raza: document.getElementById('nueva_mascota_raza').value
+        };
+      } else {
+        payload.mascota_id = selectMascota.value;
+      }
+
+      try {
+        const response = await fetch('/api/agendar-cita/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          alert('Cita reservada con éxito');
+          window.location.reload();
+        } else {
+          const err = await response.json();
+          alert('Error al reservar la cita: ' + JSON.stringify(err));
+        }
+      } catch (error) {
+        console.error('Error al agendar cita:', error);
+      }
+    });
+  }
+
+  // Cambiar Estado (Confirmar / Cancelar)
+  if (tablaBody) {
+    tablaBody.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('btn-estado')) {
+        const citaId = e.target.dataset.id;
+        const nuevoEstado = e.target.dataset.estado;
+
+        try {
+          const response = await fetch(`/api/citas/${citaId}/estado/`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ estado: nuevoEstado })
+          });
+
+          if (response.ok) {
+            window.location.reload();
+          } else {
+            alert('Error al actualizar el estado');
+          }
+        } catch (err) {
+          console.error('Error al actualizar estado de cita:', err);
+        }
+      }
+      if (response.ok) {
+  alert('¡Cita reservada con éxito!');
+  // Forzar la recarga desde el servidor limpiando valores en caché
+  window.location.href = window.location.pathname + '?t=' + new Date().getTime();
+} else {
+  const err = await response.json();
+  alert('Error al reservar la cita: ' + JSON.stringify(err));
+}
+    });
+  }
 });
+// Agregar dentro del bloque DOMContentLoaded en index.html
+const formRecordatorio = document.getElementById('form-recordatorio');
+
+if (formRecordatorio) {
+  formRecordatorio.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      mascota_id: document.getElementById('rec_mascota').value,
+      tipo: document.getElementById('rec_tipo').value,
+      fecha: document.getElementById('rec_fecha').value
+    };
+
+    try {
+      const response = await fetch('/api/recordatorios/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        alert('Recordatorio programado exitosamente');
+        window.location.reload();
+      } else {
+        const err = await response.json();
+        alert('Error al programar recordatorio: ' + JSON.stringify(err));
+      }
+    } catch (error) {
+      console.error('Error al enviar recordatorio:', error);
+    }
+  });
+}
 </script>
 {% endblock %}

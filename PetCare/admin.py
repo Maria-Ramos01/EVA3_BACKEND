@@ -33,7 +33,23 @@ class MascotaAdmin(admin.ModelAdmin):
 
 @admin.register(Veterinario)
 class VeterinarioAdmin(admin.ModelAdmin):
-    list_display = ('id', 'especialidad', 'telefono')
+    list_display = ('id', 'obtener_nombre', 'especialidad', 'telefono', 'email')
+    search_fields = ('user__first_name', 'user__last_name', 'especialidad', 'email')
+    list_filter = ('especialidad',)
+
+    def obtener_nombre(self, obj):
+        # 1. Si se ingresó un nombre directamente en el formulario
+        if obj.nombre:
+            return f"Dr(a). {obj.nombre}"
+        # 2. Si hay un usuario vinculado con nombre o apellido
+        elif obj.user and (obj.user.first_name or obj.user.last_name):
+            return f"Dr(a). {obj.user.first_name} {obj.user.last_name}"
+        # 3. Si no hay nombre ni datos en User, usa el username del User si existe
+        elif obj.user:
+            return f"Dr(a). {obj.user.username}"
+        return f"Dr(a). Veterinario #{obj.id}"
+
+    obtener_nombre.short_description = 'Nombre Profesional'
 
 @admin.register(Cita)
 class CitaAdmin(admin.ModelAdmin):
@@ -46,5 +62,7 @@ class FichaMedicaAdmin(admin.ModelAdmin):
 
 @admin.register(Recordatorio)
 class RecordatorioAdmin(admin.ModelAdmin):
-    list_display = ('id', 'tipo', 'fecha_programada', 'estado_notificacion')
-    list_filter = ('tipo', 'estado_notificacion')
+    # Cambia 'estado_notificacion' por 'estado'
+    list_display = ('mascota', 'tipo', 'fecha_programada', 'estado')
+    list_filter = ('tipo', 'estado')
+    search_fields = ('mascota__nombre', 'tipo')

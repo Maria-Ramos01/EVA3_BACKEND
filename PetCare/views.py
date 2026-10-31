@@ -15,49 +15,40 @@ from .serializers import (
 
 
 # --- VISTAS TEMPLATES HTML ---
-
+@login_required(login_url='login')
 def index(request):
-    if request.method == 'POST':
-        user_input = request.POST.get('username')
-        pass_input = request.POST.get('password')
-        user = authenticate(request, username=user_input, password=pass_input)
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')
-        else:
-            return render(request, 'petcare/index.html', {'error': 'Credenciales inválidas'})
-
     mascotas = Mascota.objects.select_related('tutor').all()
-    veterinarios = Veterinario.objects.select_related('user').all()
-    tutores = Tutor.objects.prefetch_related('mascotas').all()
+    veterinarios = Veterinario.objects.all()
+    citas = Cita.objects.select_related('mascota', 'veterinario', 'mascota__tutor').all().order_by('-fecha_hora')
+    recordatorios = Recordatorio.objects.select_related('mascota').all().order_by('-id')
 
     return render(request, 'petcare/index.html', {
         'mascotas': mascotas,
         'veterinarios': veterinarios,
-        'tutores': tutores
+        'citas': citas,
+        'recordatorios': recordatorios
     })
-    
-    return render(request, 'petcare/index.html')
-
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('index')
+
     if request.method == 'POST':
-        user_input = request.POST.get('username')
-        pass_input = request.POST.get('password')
-        user = authenticate(request, username=user_input, password=pass_input)
+        username_req = request.POST.get('username')
+        password_req = request.POST.get('password')
+        user = authenticate(request, username=username_req, password=password_req)
+        
         if user is not None:
             login(request, user)
-            return redirect('dashboard')
+            return redirect('index')
         else:
-            return render(request, 'petcare/login.html', {'error': 'Credenciales inválidas'})
+            messages.error(request, 'Usuario o contraseña incorrectos.')
     
     return render(request, 'petcare/login.html')
 
-
 def logout_view(request):
     logout(request)
-    return redirect('index')
-
+    return redirect('login')
 
 @login_required(login_url='login')
 def dashboard(request):
@@ -154,8 +145,8 @@ def agendar_cita_api(request):
         with transaction.atomic():
             veterinario = Veterinario.objects.get(id=data.get('veterinario_id'))
 
+            # 1. Obtener o crear Mascota
             if data.get('tipo_paciente') == 'NUEVO':
-                # Crear Tutor y Mascota para el paciente nuevo
                 t_data = data.get('tutor', {})
                 tutor = Tutor.objects.create(
                     nombre=t_data.get('nombre'),
@@ -171,23 +162,60 @@ def agendar_cita_api(request):
                     raza=m_data.get('raza', 'Mestizo')
                 )
             else:
-                # Obtener mascota existente
                 mascota = Mascota.objects.get(id=data.get('mascota_id'))
 
-            # Crear la Cita Médica
+            fecha_hora = data.get('fecha_hora')
+            motivo = data.get('motivo', 'Consulta Médica')
+
+            # 2. Crear Cita
             cita = Cita.objects.create(
                 mascota=mascota,
                 veterinario=veterinario,
-                fecha_hora=data.get('fecha_hora'),
-                motivo=data.get('motivo', 'Consulta general'),
-                estado='CONFIRMADA'
+                fecha_hora=fecha_hora,
+                motivo=motivo,
+                estado='PENDIENTE'
             )
 
-            return Response({'message': 'Cita agendada correctamente'}, status=status.HTTP_201_CREATED)
+            # 3. Crear Recordatorio asignando campos del modelo Recordatorio
+            # Evaluamos si tu modelo usa 'paciente' o 'mascota'
+            recordatorio_kwargs = {}
+            if hasattr(Recordatorio, 'paciente'):
+                recordatorio_kwargs['paciente'] = mascota
+            elif hasattr(Recordatorio, 'mascota'):
+                recordatorio_kwargs['mascota'] = mascota
+
+            if hasattr(Recordatorio, 'tipo'):
+                recordatorio_kwargs['tipo'] = f"Cita con {veterinario} - {motivo}"
+
+            if hasattr(Recordatorio, 'fecha_programada'):
+                recordatorio_kwargs['fecha_programada'] = fecha_hora
+            elif hasattr(Recordatorio, 'fecha'):
+                recordatorio_kwargs['fecha'] = fecha_hora
+
+            if hasattr(Recordatorio, 'estado_notificacion'):
+                recordatorio_kwargs['estado_notificacion'] = 'Programado'
+            elif hasattr(Recordatorio, 'estado'):
+                recordatorio_kwargs['estado'] = 'PENDIENTE'
+
+            Recordatorio.objects.create(**recordatorio_kwargs)
+
+            return Response({'message': 'Cita y recordatorio agendados con éxito'}, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+@api_view(['PATCH'])
+@permission_classes([AllowAny])
+def cambiar_estado_cita_api(request, pk):
+    try:
+        cita = Cita.objects.get(pk=pk)
+        nuevo_estado = request.data.get('estado')
+        if nuevo_estado in ['PENDIENTE', 'CONFIRMADA', 'CANCELADA']:
+            cita.estado = nuevo_estado
+            cita.save()
+            return Response({'message': f'Estado actualizado a {nuevo_estado}'}, status=status.HTTP_200_OK)
+        return Response({'error': 'Estado no válido'}, status=status.HTTP_400_BAD_REQUEST)
+    except Cita.DoesNotExist:
+        return Response({'error': 'Cita no encontrada'}, status=status.HTTP_404_NOT_FOUND)
 
 @login_required(login_url='login')
 def fichas_medicas(request):
@@ -195,8 +223,26 @@ def fichas_medicas(request):
 
 
 @login_required(login_url='login')
-def recordatorios(request):
-    return render(request, 'petcare/recordatorios.html')
+def crear_recordatorio_api(request):
+    data = request.data
+    try:
+        mascota_id = data.get('mascota_id')
+        if not mascota_id:
+            return Response({'error': 'Debe seleccionar una mascota'}, status=status.HTTP_400_BAD_REQUEST)
+
+        mascota = Mascota.objects.get(id=mascota_id)
+        
+        # Crear asignando los nombres de campos en la base de datos
+        Recordatorio.objects.create(
+            mascota=mascota,
+            tipo=data.get('tipo', 'Control Preventivo'),
+            fecha_programada=data.get('fecha'),
+            estado='PENDIENTE'
+        )
+
+        return Response({'message': 'Recordatorio guardado con éxito'}, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # --- API VIEWSETS (DRF) ---
