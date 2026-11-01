@@ -34,4 +34,10 @@ Para cumplir con todos los requerimientos solicitados (persistencia en base de d
 
 Para resolver ambos problemas (sincronizar el selector de mascotas registradas al agendar citas y habilitar la modificación de tutores/mascotas desde el botón Editar), debes implementar dos ajustes principales:
 
-10. 
+10. bien, ahora dime como conectar la instancia en aws ec2
+
+Para conectar tu proyecto Django y PostgreSQL desplegado en una instancia de AWS EC2, el método más común y seguro es a través de SSH (Secure Shell) desde tu terminal o la consola de AWS.
+
+11. ahora genera las instucciones claras de ejecucion con la ip publica de aws ec2 funcional para colocar en el readme.md
+
+Aquí tienes el bloque completo y listo en formato Markdown para copiar y pegar directamente en tu archivo README.md:
