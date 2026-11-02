@@ -3,224 +3,274 @@
 {% block title %}Tutores y Mascotas - PetCare{% endblock %}
 
 {% block content %}
-<h2>Registro de Tutores y Mascotas</h2>
+<style>
+    .form-group-custom {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 1rem;
+    }
+    .form-group-custom label {
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+    .mascota-item {
+        background-color: #f8f9fa;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Forzar los colores de estado sin que los sobreescriba styles.css */
+    .btn-estado-activo {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+        color: #ffffff !important;
+        font-weight: 600;
+        min-width: 120px;
+    }
+    .btn-estado-inactivo {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: #ffffff !important;
+        font-weight: 600;
+        min-width: 120px;
+    }
+</style>
 
-<div class="card">
-  <h3>Nuevo Registro de Tutor</h3>
-  <form id="form-tutor-mascota">
-    <!-- Datos del Tutor -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-      <div class="form-group">
-        <label for="tutor_nombre">Nombre Completo del Tutor:</label>
-        <input type="text" id="tutor_nombre" required placeholder="Ej: Juan Pérez">
-      </div>
-      <div class="form-group">
-        <label for="tutor_rut">RUT:</label>
-        <input type="text" id="tutor_rut" required placeholder="Ej: 12.345.678-9">
-      </div>
-      <div class="form-group">
-        <label for="tutor_email">Correo Electrónico:</label>
-        <input type="email" id="tutor_email" required placeholder="ejemplo@correo.com">
-      </div>
-      <div class="form-group">
-        <label for="tutor_telefono">Número de Teléfono:</label>
-        <input type="tel" id="tutor_telefono" required placeholder="+56 9 1234 5678">
-      </div>
-    </div>
+<div class="container py-4">
+    <h2 class="fw-bold mb-4">Gestión de Tutores y Mascotas</h2>
 
-    <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid var(--border);">
-
-    <!-- Datos de Mascotas -->
-    <h3>Mascotas Asociadas</h3>
-    <div id="contenedor-mascotas">
-      <div class="mascota-item" style="border: 1px dashed var(--border); padding: 1rem; margin-bottom: 1rem; border-radius: 6px;">
-        <h4>Mascota 1</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
-          <div class="form-group">
-            <label>Nombre Mascota:</label>
-            <input type="text" class="mascota_nombre" required>
-          </div>
-          <div class="form-group">
-  <label for="especie">Especie:</label>
-  <select id="especie" class="mascota_especie" required>
-    <option value="PERRO">Perro</option>
-    <option value="GATO">Gato</option>
-    <option value="OTRO">Otro</option>
-  </select>
-</div>
-
-<div class="form-group">
-  <label for="raza">Raza:</label>
-  <input type="text" id="raza" class="mascota_raza" placeholder="Ej: Mestizo" required>
-</div>
-        </div>
-      </div>
-    </div>
-
-    <div style="margin-bottom: 1.5rem;">
-      <button type="button" id="btn-agregar-mascota" class="btn" style="background-color: #4a5568;">+ Agregar otra mascota</button>
-    </div>
-
-    <button type="submit" class="btn">Guardar Tutor y Mascotas</button>
-  </form>
-</div>
-
-<div class="card">
-  <h3>Listado de Pacientes Registrados</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Tutor</th>
-        <th>RUT</th>
-        <th>Contacto</th>
-        <th>Mascotas</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody id="tabla-pacientes">
-  {% for tutor in tutores %}
-  <tr>
-    <td>{{ tutor.nombre }} {{ tutor.apellido }}</td>
-    <td>{{ tutor.rut }}</td>
-    <td>{{ tutor.email }}<br><small>{{ tutor.telefono }}</small></td>
-    <td>
-      <ul>
-        {% for mascota in tutor.mascotas.all %}
-          <li><strong>{{ mascota.nombre }}</strong> ({{ mascota.get_especie_display }} - {{ mascota.raza }})</li>
-        {% empty %}
-          <li>Sin mascotas registradas</li>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         {% endfor %}
-      </ul>
-    </td>
-    <td><button class="btn">Editar</button></td>
-  </tr>
-  {% empty %}
-  <tr>
-    <td colspan="5">No hay tutores ni pacientes registrados.</td>
-  </tr>
-  {% endfor %}
-</tbody>
-  </table>
+    {% endif %}
+
+    <!-- Formulario Principal -->
+    <div class="card p-4 shadow-sm bg-white border-0 mb-5" style="border-radius: 12px;">
+        <h3 class="h4 mb-4 text-secondary border-bottom pb-2">
+            {% if tutor_editar %}Editar Tutor: {{ tutor_editar.nombre }}{% else %}Registro de Tutor y Pacientes{% endif %}
+        </h3>
+
+        <form method="POST" action="{% if tutor_editar %}{% url 'editar_tutor_mascotas' tutor_editar.id %}{% else %}{% url 'tutores_mascotas' %}{% endif %}">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 form-group-custom">
+                    <label>Nombre Completo del Tutor:</label>
+                    <input type="text" name="nombre_tutor" class="form-control" value="{{ tutor_editar.nombre|default:'' }}" placeholder="Ej: Juan Pérez" required>
+                </div>
+                <div class="col-md-6 form-group-custom">
+                    <label>RUT:</label>
+                    <input type="text" name="rut" class="form-control" value="{{ tutor_editar.rut|default:'' }}" placeholder="Ej: 12.345.678-9" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 form-group-custom">
+                    <label>Correo Electrónico:</label>
+                    <input type="email" name="email" class="form-control" value="{{ tutor_editar.email|default:'' }}" placeholder="ejemplo@correo.com" required>
+                </div>
+                <div class="col-md-6 form-group-custom">
+                    <label>Número de Teléfono:</label>
+                    <input type="text" name="telefono" class="form-control" value="{{ tutor_editar.telefono|default:'' }}" placeholder="+56 9 1234 5678" required>
+                </div>
+            </div>
+
+            <!-- Sección Mascotas Asociadas -->
+            <h4 class="h5 mt-4 mb-3 text-secondary">Mascotas Asociadas</h4>
+            <div id="contenedor-mascotas">
+                {% if tutor_editar and tutor_editar.mascotas.all %}
+                    {% for mascota in tutor_editar.mascotas.all %}
+                        <div class="mascota-item">
+                            <input type="hidden" name="mascota_id[]" value="{{ mascota.id }}">
+                            <div class="row align-items-end">
+                                <div class="col-md-3 form-group-custom">
+                                    <label>Nombre Mascota:</label>
+                                    <input type="text" name="nombre_mascota[]" class="form-control" value="{{ mascota.nombre }}" required>
+                                </div>
+                                <div class="col-md-3 form-group-custom">
+                                    <label>Especie:</label>
+                                    <select name="especie[]" class="form-select">
+                                        <option value="PERRO" {% if mascota.especie == 'PERRO' %}selected{% endif %}>Perro</option>
+                                        <option value="GATO" {% if mascota.especie == 'GATO' %}selected{% endif %}>Gato</option>
+                                        <option value="OTRO" {% if mascota.especie == 'OTRO' %}selected{% endif %}>Otro</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 form-group-custom">
+                                    <label>Raza:</label>
+                                    <input type="text" name="raza[]" class="form-control" value="{{ mascota.raza|default:'' }}">
+                                </div>
+                                <div class="col-md-3 form-group-custom">
+                                    <label>Estado:</label>
+                                    <input type="hidden" name="estado_val[]" value="{{ mascota.estado }}" class="activo-hidden">
+                                    <button type="button" 
+                                            class="btn w-100 {% if mascota.estado == 'ACTIVO' %}btn-estado-activo{% else %}btn-estado-inactivo{% endif %}" 
+                                            onclick="toggleEstado(this)">
+                                        {% if mascota.estado == 'ACTIVO' %}✓ Activo{% else %}✗ Inactivo{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Bloque inicial para cuando es un registro nuevo -->
+                    <div class="mascota-item">
+                        <input type="hidden" name="mascota_id[]" value="">
+                        <div class="row align-items-end">
+                            <div class="col-md-3 form-group-custom">
+                                <label>Nombre Mascota:</label>
+                                <input type="text" name="nombre_mascota[]" class="form-control" placeholder="Ej: Cachupín" required>
+                            </div>
+                            <div class="col-md-3 form-group-custom">
+                                <label>Especie:</label>
+                                <select name="especie[]" class="form-select">
+                                    <option value="PERRO">Perro</option>
+                                    <option value="GATO">Gato</option>
+                                    <option value="OTRO">Otro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 form-group-custom">
+                                <label>Raza:</label>
+                                <input type="text" name="raza[]" class="form-control" placeholder="Ej: Mestizo">
+                            </div>
+                            <div class="col-md-3 form-group-custom">
+                                <label>Estado:</label>
+                                <input type="hidden" name="estado_val[]" value="ACTIVO" class="activo-hidden">
+                                <button type="button" class="btn btn-estado-activo w-100" onclick="toggleEstado(this)">
+                                    ✓ Activo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-agregar-mascota">
+                    + Agregar otra mascota
+                </button>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">Guardar Tutor y Mascotas</button>
+                {% if tutor_editar %}
+                    <a href="{% url 'tutores_mascotas' %}" class="btn btn-secondary">Cancelar Edición</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Listado de Pacientes Registrados -->
+    <div class="card p-4 shadow-sm bg-white border-0" style="border-radius: 12px;">
+        <h3 class="h4 mb-4 text-secondary border-bottom pb-2">Listado de Pacientes Registrados</h3>
+        
+        <div class="table-responsive">
+            <table class="table table-striped align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tutor</th>
+                        <th>RUT</th>
+                        <th>Contacto</th>
+                        <th>Mascotas</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tutor in tutores %}
+                        <tr>
+                            <td><strong>{{ tutor.nombre }}</strong></td>
+                            <td>{{ tutor.rut }}</td>
+                            <td>
+                                <small>{{ tutor.email }}</small><br>
+                                <small class="text-muted">{{ tutor.telefono }}</small>
+                            </td>
+                            <td>
+                                <ul class="list-unstyled mb-0">
+                                    {% for mascota in tutor.mascotas.all %}
+                                        <li>
+                                            • <strong>{{ mascota.nombre }}</strong> 
+                                            ({{ mascota.get_especie_display|default:mascota.especie }} - 
+                                            {% if mascota.estado == 'ACTIVO' %}
+                                                <span class="badge bg-success">Activo</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactivo</span>
+                                            {% endif %})
+                                        </li>
+                                    {% empty %}
+                                        <li class="text-muted small">Sin mascotas registradas</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                                <a href="{% url 'editar_tutor_mascotas' tutor.id %}" class="btn btn-primary btn-sm">Editar</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-<!-- Modal para Editar Tutor -->
-<div id="modal-editar" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-  <div style="background:#fff; padding:2rem; border-radius:8px; width:400px; max-width:90%;">
-    <h3>Editar Datos del Tutor</h3>
-    <form id="form-editar-tutor">
-      <input type="hidden" id="edit_tutor_id">
-      <td>
-      <button type="button" class="btn" onclick="editarTutor('{{ tutor.id }}', '{{ tutor.nombre }}', '{{ tutor.rut }}', '{{ tutor.email }}', '{{ tutor.telefono }}')">
-        Editar
-      </button>
-     </td>
-      <div class="form-group" style="margin-bottom: 1rem;">
-        <label>Nombre Tutor:</label>
-        <input type="text" id="edit_tutor_nombre" class="form-control" required style="width:100%;">
-      </div>
-      <div class="form-group" style="margin-bottom: 1rem;">
-        <label>RUT:</label>
-        <input type="text" id="edit_tutor_rut" class="form-control" required style="width:100%;">
-      </div>
-      <div class="form-group" style="margin-bottom: 1rem;">
-        <label>Correo Electrónico:</label>
-        <input type="email" id="edit_tutor_email" class="form-control" required style="width:100%;">
-      </div>
-      <div class="form-group" style="margin-bottom: 1rem;">
-        <label>Teléfono:</label>
-        <input type="text" id="edit_tutor_telefono" class="form-control" required style="width:100%;">
-      </div>
-      <div style="display:flex; gap:1rem; justify-content:flex-end; margin-top:1.5rem;">
-        <button type="button" class="btn" onclick="cerrarModal()" style="background:#718096;">Cancelar</button>
-        <button type="submit" class="btn">Guardar Cambios</button>
-      </div>
-    </form>
-  </div>
-</div>
-{% endblock %}
-{% block extra_js %}
+
 <script>
-// Función para obtener la cookie CSRF que exige Django por seguridad
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
+    // Alternar el estado entre ACTIVO (Verde) e INACTIVO (Rojo)
+    function toggleEstado(btn) {
+        const hiddenInput = btn.previousElementSibling;
+        if (hiddenInput.value === 'ACTIVO') {
+            hiddenInput.value = 'INACTIVO';
+            btn.classList.remove('btn-estado-activo');
+            btn.classList.add('btn-estado-inactivo');
+            btn.textContent = '✗ Inactivo';
+        } else {
+            hiddenInput.value = 'ACTIVO';
+            btn.classList.remove('btn-estado-inactivo');
+            btn.classList.add('btn-estado-activo');
+            btn.textContent = '✓ Activo';
+        }
     }
-  }
-  return cookieValue;
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-  const formTutorMascota = document.getElementById('form-tutor-mascota');
-  const tablaPacientes = document.getElementById('tabla-pacientes');
-
-  formTutorMascota.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    // 1. Recolectar datos del tutor
-    const nombre = document.getElementById('tutor_nombre').value;
-    const rut = document.getElementById('tutor_rut').value;
-    const email = document.getElementById('tutor_email').value;
-    const telefono = document.getElementById('tutor_telefono').value;
-
-    // 2. Recolectar array con todas las mascotas ingresadas
-    const mascotas = [];
-    document.querySelectorAll('.mascota-item').forEach(item => {
-      mascotas.push({
-        nombre: item.querySelector('.mascota_nombre').value,
-        especie: item.querySelector('.mascota_especie').value, // 'PERRO', 'GATO', 'OTRO'
-        raza: item.querySelector('.mascota_raza').value
-      });
-    });
-
-    const payload = { nombre, rut, email, telefono, mascotas };
-
-    try {
-      // 3. Realizar la petición POST asíncrona a la API de Django
-      const response = await fetch('/api/registrar-tutor-mascotas/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken') // Token de seguridad obligatorio
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        // 4. Inserción dinámica en la tabla al confirmarse el guardado en PostgreSQL
-        let mascotasHTML = '<ul>';
-        result.tutor.mascotas.forEach(m => {
-          mascotasHTML += `<li><strong>${m.nombre}</strong> (${m.especie} - ${m.raza})</li>`;
-        });
-        mascotasHTML += '</ul>';
-
-        const nuevaFila = document.createElement('tr');
-        nuevaFila.innerHTML = `
-          <td>${result.tutor.nombre}</td>
-          <td>${result.tutor.rut}</td>
-          <td>${result.tutor.email}<br><small>${result.tutor.telefono}</small></td>
-          <td>${mascotasHTML}</td>
-          <td><button class="btn">Editar</button></td>
+    // Agregar dinámicamente nuevos bloques de mascota
+    document.getElementById('btn-agregar-mascota').addEventListener('click', function() {
+        const contenedor = document.getElementById('contenedor-mascotas');
+        const nuevoBloque = document.createElement('div');
+        nuevoBloque.className = 'mascota-item';
+        nuevoBloque.innerHTML = `
+            <input type="hidden" name="mascota_id[]" value="">
+            <div class="row align-items-end">
+                <div class="col-md-3 form-group-custom">
+                    <label>Nombre Mascota:</label>
+                    <input type="text" name="nombre_mascota[]" class="form-control" placeholder="Ej: Nombre" required>
+                </div>
+                <div class="col-md-3 form-group-custom">
+                    <label>Especie:</label>
+                    <select name="especie[]" class="form-select">
+                        <option value="PERRO">Perro</option>
+                        <option value="GATO">Gato</option>
+                        <option value="OTRO">Otro</option>
+                    </select>
+                </div>
+                <div class="col-md-3 form-group-custom">
+                    <label>Raza:</label>
+                    <input type="text" name="raza[]" class="form-control" placeholder="Ej: Mestizo">
+                </div>
+                <div class="col-md-2 form-group-custom">
+                    <label>Estado:</label>
+                    <input type="hidden" name="estado_val[]" value="ACTIVO" class="activo-hidden">
+                    <button type="button" class="btn btn-estado-activo w-100" onclick="toggleEstado(this)">
+                        ✓ Activo
+                    </button>
+                </div>
+                <div class="col-md-1 form-group-custom">
+                    <button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.mascota-item').remove()">✕</button>
+                </div>
+            </div>
         `;
-
-        tablaPacientes.appendChild(nuevaFila);
-        formTutorMascota.reset();
-        alert('Tutor y mascotas guardados correctamente en la base de datos.');
-      } else {
-        alert(`Error al guardar: ${result.error || 'Verifica los datos expuestos.'}`);
-      }
-    } catch (error) {
-      console.error('Error de red/servidor:', error);
-      alert('No se pudo conectar con el servidor Backend.');
-    }
-  });
-});
+        contenedor.appendChild(nuevoBloque);
+    });
 </script>
 {% endblock %}

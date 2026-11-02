@@ -33,9 +33,10 @@ class MascotaAdmin(admin.ModelAdmin):
 
 @admin.register(Veterinario)
 class VeterinarioAdmin(admin.ModelAdmin):
-    list_display = ('id', 'obtener_nombre', 'especialidad', 'telefono', 'email')
-    search_fields = ('user__first_name', 'user__last_name', 'especialidad', 'email')
-    list_filter = ('especialidad',)
+    list_display = ('nombre', 'especialidad', 'hora_inicio', 'hora_fin', 'activo')
+    list_editable = ('hora_inicio', 'hora_fin', 'activo')
+    search_fields = ('nombre', 'especialidad')
+    list_filter = ('activo', 'especialidad')
 
     def obtener_nombre(self, obj):
         # 1. Si se ingresó un nombre directamente en el formulario
@@ -58,7 +59,20 @@ class CitaAdmin(admin.ModelAdmin):
 
 @admin.register(FichaMedica)
 class FichaMedicaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'fecha', 'diagnostico')
+    list_display = ('id', 'mascota', 'diagnostico_corto', 'fecha_creacion', 'tiene_adjunto')
+    list_filter = ('fecha_creacion', 'mascota')
+    search_fields = ('mascota__nombre', 'diagnostico', 'tratamiento', 'receta')
+    fields = ('mascota', 'diagnostico', 'tratamiento', 'receta', 'adjunto', 'fecha_creacion')
+    readonly_fields = ('fecha_creacion',)  # La fecha se genera automáticamente
+
+    def diagnostico_corto(self, obj):
+        return obj.diagnostico[:50] + "..." if len(obj.diagnostico) > 50 else obj.diagnostico
+    diagnostico_corto.short_description = "Diagnóstico"
+
+    def tiene_adjunto(self, obj):
+        return bool(obj.adjunto)
+    tiene_adjunto.boolean = True
+    tiene_adjunto.short_description = "Adjunto"
 
 @admin.register(Recordatorio)
 class RecordatorioAdmin(admin.ModelAdmin):

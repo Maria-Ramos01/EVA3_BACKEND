@@ -223,6 +223,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectMascota = document.getElementById('select_mascota');
   const formCita = document.getElementById('form-cita');
   const tablaBody = document.getElementById('tabla-citas-body');
+  const selectVet = document.getElementById('select-veterinario'); // ID del select del profesional
+  const inputFechaHora = document.querySelector('input[type="datetime-local"]');
 
   function getCookie(name) {
     let cookieValue = null;
@@ -378,5 +380,66 @@ if (formRecordatorio) {
     }
   });
 }
+document.getElementById('select-veterinario').addEventListener('change', async function() {
+    const vetId = this.value;
+    if (!vetId) return;
+
+    const response = await fetch(`/api/veterinarios/${vetId}/disponibilidad/`);
+    if (response.ok) {
+        const data = await response.json();
+        
+        // Ajustar el min y max del input time según la disponibilidad configurada
+        const inputHora = document.getElementById('input-hora-cita');
+        inputHora.min = data.hora_inicio;
+        inputHora.max = data.hora_fin;
+        
+        alert(`Horario de atención: ${data.hora_inicio} a ${data.hora_fin}`);
+    }
+});
+inputFechaHora.addEventListener('change', async function() {
+    const vetId = selectVet.value;
+    const fechaHoraValor = this.value; // Formato: YYYY-MM-DDTHH:MM
+
+    if (!vetId) {
+        alert('Por favor selecciona primero un profesional.');
+        this.value = '';
+        return;
+    }
+
+    if (!fechaHoraValor) return;
+
+    const [fecha, hora] = fechaHoraValor.split('T');
+    
+    // Validar día de la semana (1 = Lunes, 7 = Domingo)
+    const fechaObj = new Date(fecha + 'T00:00:00');
+    let diaSemana = fechaObj.getDay(); 
+    diaSemana = diaSemana === 0 ? 7 : diaSemana; // Convertir Domingo de 0 a 7
+
+    const response = await fetch(`/api/disponibilidad-horas/?vet_id=${vetId}&fecha=${fecha}`);
+    if (response.ok) {
+        const data = await response.json();
+
+        // 1. Validar si el profesional atiende ese día
+        if (!data.dias_permitidos.includes(diaSemana)) {
+            alert('El profesional seleccionado no atiende el día seleccionado.');
+            this.value = '';
+            return;
+        }
+
+        // 2. Validar rango de horario del profesional
+        if (hora < data.hora_inicio || hora > data.hora_fin) {
+            alert(`El horario de atención para este profesional es de ${data.hora_inicio} a ${data.hora_fin}.`);
+            this.value = '';
+            return;
+        }
+
+        // 3. Validar solapamiento con citas existentes
+        if (data.horas_ocupadas.includes(hora)) {
+            alert(`La hora ${hora} ya se encuentra reservada para este profesional. Por favor elige otro horario.`);
+            this.value = '';
+            return;
+        }
+    }
+});
 </script>
 {% endblock %}

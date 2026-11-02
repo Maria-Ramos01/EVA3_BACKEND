@@ -6,6 +6,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}PetCare - Gestión Veterinaria{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'petcare/css/styles.css' %}">
+  
+  <style>
+    /* Estructura para fijar el footer abajo */
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container {
+      flex: 1 0 auto;
+    }
+
+    /* Estilos del Footer Elegante */
+    .footer-custom {
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: #ffffff;
+      text-align: center;
+      padding: 1.25rem 1rem;
+      margin-top: 3rem;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+      font-family: inherit;
+    }
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+    .footer-text {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      color: #e2e8f0;
+    }
+    .footer-highlight {
+      color: #63b3ed;
+      font-weight: 600;
+    }
+    .footer-divider {
+      width: 50px;
+      height: 2px;
+      background-color: #4299e1;
+      margin: 0.4rem auto;
+      border-radius: 2px;
+      opacity: 0.7;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -16,7 +72,6 @@
         <a href="{% url 'index' %}">Inicio</a>
         <a href="{% url 'tutores_mascotas' %}">Tutores y Mascotas</a>
         <a href="{% url 'fichas_medicas' %}">Fichas Médicas</a>
-        <!-- En templates/petcare/base.html (Línea 19) -->
         <a href="{% url 'index' %}#modulo-recordatorios">Recordatorios</a>
         <a href="{% url 'logout' %}" class="btn" style="background-color: #e53e3e;">Cerrar Sesión</a>
       {% else %}
@@ -24,7 +79,6 @@
           <a href="{% url 'index' %}">Inicio</a>
           <a href="{% url 'tutores_mascotas' %}">Tutores y Mascotas</a>
           <a href="{% url 'fichas_medicas' %}">Fichas Médicas</a>
-          <!-- En templates/petcare/base.html (Línea 19) -->
           <a href="{% url 'index' %}#modulo-recordatorios">Recordatorios</a>
         </span>
       {% endif %}
@@ -34,6 +88,16 @@
   <main class="container">
     {% block content %}{% endblock %}
   </main>
+
+  <!-- Pie de Página Global -->
+  <footer class="footer-custom">
+    <div class="footer-content">
+      <div class="footer-divider"></div>
+      <p class="footer-text">
+        Desarrollado por <span class="footer-highlight">Maria Fernanda Ramos</span> | Sección <strong>AP-N4-C2(E-F)</strong> | Fecha 02-11-2026
+      </p>
+    </div>
+  </footer>
 
   <script src="{% static 'petcare/js/main.js' %}"></script>
   {% block extra_js %}{% endblock %}

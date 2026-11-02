@@ -47,6 +47,7 @@ class Mascota(models.Model):
     peso = models.DecimalField(max_digits=5, decimal_places=2, default=1.0)
     sexo = models.CharField(max_length=10, choices=SEXOS, default='MACHO')
     estado = models.CharField(max_length=10, choices=ESTADOS, default='ACTIVO')
+    
 
     def __str__(self):
         return f"{self.nombre} ({self.tutor.nombre})"
@@ -58,6 +59,17 @@ class Veterinario(models.Model):
     especialidad = models.CharField(max_length=100, default='General')
     telefono = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
+    hora_inicio = models.TimeField(default="09:00:00", help_text="Hora de inicio de atención")
+    hora_fin = models.TimeField(default="18:00:00", help_text="Hora de término de atención")
+    dias_atencion = models.CharField(
+        max_length=50, 
+        default="1,2,3,4,5", 
+        help_text="Días permitidos separados por coma (1=Lunes, 7=Domingo)"
+    )
+    activo = models.BooleanField(default=True, help_text="Disponibilidad general para recibir citas")
+
+    def __str__(self):
+        return f"Dr(a). {self.usuario.get_full_name() or self.usuario.username} - {self.especialidad}"
 
     def __str__(self):
         # 1. Si tiene el campo nombre directo lleno (Ej: Frambuesa)
@@ -89,15 +101,14 @@ class Cita(models.Model):
 
 class FichaMedica(models.Model):
     mascota = models.ForeignKey(Mascota, on_delete=models.CASCADE, related_name='fichas_medicas')
-    veterinario = models.ForeignKey(Veterinario, on_delete=models.SET_NULL, null=True)
-    fecha = models.DateTimeField(auto_now_add=True)
     diagnostico = models.TextField()
-    tratamiento = models.TextField()
-    receta_medica = models.TextField(blank=True, null=True)
-    examenes = models.FileField(upload_to='examenes/', blank=True, null=True)
+    tratamiento = models.TextField(blank=True, null=True)
+    receta = models.TextField(blank=True, null=True)
+    adjunto = models.FileField(upload_to='fichas_adjuntos/', blank=True, null=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Ficha {self.mascota.nombre} - {self.fecha.strftime('%d/%m/%Y')}"
+        return f"Ficha {self.mascota.nombre} - {self.fecha_creacion.strftime('%d/%m/%Y')}"
 
 
 class Recordatorio(models.Model):
