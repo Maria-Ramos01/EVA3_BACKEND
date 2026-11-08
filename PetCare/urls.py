@@ -34,7 +34,10 @@ urlpatterns = [
     path('api/registrar-tutor-mascotas/', views.registrar_tutor_mascotas_api, name='api_registrar_tutor_mascotas'),
     path('fichas-medicas/', views.fichas_medicas, name='fichas_medicas'),
     path('api/recordatorios/', views.crear_recordatorio_api, name='crear_recordatorio_api'),
+    path('api/recordatorios/<int:rec_id>/eliminar/', views.eliminar_recordatorio_api, name='eliminar_recordatorio_api'),
+    path('api/recordatorios/<int:rec_id>/editar/', views.editar_recordatorio_api, name='editar_recordatorio_api'),
     path('api/veterinarios/<int:vet_id>/disponibilidad/', views.obtener_disponibilidad_veterinario, name='vet-disponibilidad'),
+    path('veterinarios/', views.lista_veterinarios, name='lista_veterinarios'),    
     path('api/disponibilidad-horas/', views.obtener_horas_ocupadas, name='disponibilidad-horas'),
     path('api/', include(router.urls)),
 ]

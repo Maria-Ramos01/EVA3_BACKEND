@@ -1,0 +1,68 @@
+{% extends 'petcare/base.html' %}
+{% load static %}
+
+{% block title %}Nuestros Veterinarios - PetCare{% endblock %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 900px;">
+  <h2 class="text-center fw-bold mb-4" style="color: #1d528f;">Nuestros Profesionales Veterinarios</h2>
+
+  <div class="row g-4 justify-content-center">
+    {% for vet in veterinarios %}
+      <div class="col-md-8">
+        <div class="card shadow-sm border-0 p-4" style="border-radius: 10px;">
+          <h4 class="fw-bold mb-1" style="color: #2c3e50;">Dr(a). {{ vet.nombre }} {{ vet.apellido }}</h4>
+          <p class="text-muted small fw-bold mb-3">{{ vet.especialidad|default:"Medicina General" }}</p>
+          <hr style="border-color: #e2e8f0; margin-top: 0;">
+
+          <div class="mb-2">
+            <strong>Email:</strong> <span class="text-secondary">{{ vet.email }}</span>
+          </div>
+          <div class="mb-3">
+            <strong>Teléfono:</strong> <span class="text-secondary">{{ vet.telefono }}</span>
+          </div>
+
+          <!-- Bloque de Días y Horario de Atención desde Admin -->
+          <div class="p-3 border-0 rounded-3" style="background-color: #f8fafc; border-left: 4px solid #1d528f !important;">
+            <div class="fw-bold text-dark mb-1">
+              🕒 Disponibilidad de Atención:
+            </div>
+            <div class="text-secondary small">
+              <!-- Días de atención desde la BD -->
+              <div class="mb-1">
+                <strong>Días:</strong> 
+                {% if vet.dias_atencion %}
+                  <span>{{ vet.dias_atencion }}</span>
+                {% elif vet.dias %}
+                  <span>{{ vet.dias }}</span>
+                {% else %}
+                  <span>Lunes a Viernes</span>
+                {% endif %}
+              </div>
+
+              <!-- Horas de atención desde la BD -->
+              <div>
+                <strong>Horario:</strong> 
+                {% if vet.hora_inicio and vet.hora_fin %}
+                  <span>{{ vet.hora_inicio|time:"H:i" }} - {{ vet.hora_fin|time:"H:i" }} hrs</span>
+                {% elif vet.horario_atencion %}
+                  <span>{{ vet.horario_atencion }}</span>
+                {% elif vet.horario %}
+                  <span>{{ vet.horario }}</span>
+                {% else %}
+                  <span class="text-muted italic">No especificado</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12 text-center text-muted py-4">
+        <p>No hay profesionales veterinarios registrados en el sistema.</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

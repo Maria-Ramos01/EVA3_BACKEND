@@ -1,10 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.db import transaction
+import json
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
@@ -20,13 +23,13 @@ def es_admin(user):
 # --- VISTAS TEMPLATES HTML ---
 @login_required(login_url='login')
 def index(request):
-    mascotas = Mascota.objects.select_related('tutor').all()
+    mascotas_activas = Mascota.objects.filter(estado__iexact='ACTIVO')
     veterinarios = Veterinario.objects.all()
     citas = Cita.objects.select_related('mascota', 'veterinario', 'mascota__tutor').all().order_by('-fecha_hora')
     recordatorios = Recordatorio.objects.select_related('mascota').all().order_by('-id')
 
     return render(request, 'petcare/index.html', {
-        'mascotas': mascotas,
+        'mascotas': mascotas_activas,
         'veterinarios': veterinarios,
         'citas': citas,
         'recordatorios': recordatorios
@@ -299,26 +302,95 @@ def fichas_medicas(request):
     return render(request, 'petcare/fichas_medicas.html', {'fichas': fichas})
 
 @login_required(login_url='login')
+@csrf_exempt
 def crear_recordatorio_api(request):
-    data = request.data
-    try:
-        mascota_id = data.get('mascota_id')
-        if not mascota_id:
-            return Response({'error': 'Debe seleccionar una mascota'}, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            mascota_id = data.get('mascota_id')
+            tipo = data.get('tipo')
+            fecha = data.get('fecha')
 
-        mascota = Mascota.objects.get(id=mascota_id)
-        
-        # Crear asignando los nombres de campos en la base de datos
-        Recordatorio.objects.create(
-            mascota=mascota,
-            tipo=data.get('tipo', 'Control Preventivo'),
-            fecha_programada=data.get('fecha'),
-            estado='PENDIENTE'
-        )
+            if not mascota_id or not fecha:
+                return JsonResponse({'status': 'error', 'message': 'Faltan campos obligatorios (Mascota o Fecha)'}, status=400)
 
-        return Response({'message': 'Recordatorio guardado con éxito'}, status=status.HTTP_201_CREATED)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            mascota = Mascota.objects.get(id=mascota_id)
+            
+            # Crear recordatorio con los campos mínimos requeridos
+            recordatorio = Recordatorio.objects.create(
+                mascota=mascota,
+                tipo=tipo,
+                fecha_programada=fecha
+            )
+
+            # Si el modelo incluye algún campo para el estado de notificación, lo asignamos de forma segura
+            estado_texto = "PENDIENTE"
+            if hasattr(recordatorio, 'estado_notificacion'):
+                recordatorio.estado_notificacion = "PENDIENTE"
+                recordatorio.save()
+                estado_texto = recordatorio.estado_notificacion
+            elif hasattr(recordatorio, 'estado'):
+                recordatorio.estado = "PENDIENTE"
+                recordatorio.save()
+                estado_texto = recordatorio.estado
+
+            return JsonResponse({
+                'status': 'success',
+                'recordatorio': {
+                    'id': recordatorio.id,
+                    'mascota_nombre': mascota.nombre,
+                    'tipo': recordatorio.tipo,
+                    'fecha': str(recordatorio.fecha_programada),
+                    'estado': estado_texto
+                }
+            })
+        except Mascota.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'La mascota seleccionada no existe'}, status=404)
+        except Exception as e:
+            # Devuelve el mensaje exacto de error en lugar de la alerta genérica
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+
+@csrf_exempt
+def eliminar_recordatorio_api(request, rec_id):
+    if request.method in ['DELETE', 'POST']:
+        try:
+            recordatorio = Recordatorio.objects.get(id=rec_id)
+            recordatorio.delete()
+            return JsonResponse({'status': 'success'})
+        except Recordatorio.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'El recordatorio no existe'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+
+@csrf_exempt
+def editar_recordatorio_api(request, rec_id):
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            recordatorio = Recordatorio.objects.get(id=rec_id)
+            
+            if 'tipo' in data:
+                recordatorio.tipo = data['tipo']
+            if 'fecha' in data:
+                recordatorio.fecha_programada = data['fecha']
+                
+            recordatorio.save()
+            return JsonResponse({
+                'status': 'success',
+                'recordatorio': {
+                    'id': recordatorio.id,
+                    'tipo': recordatorio.tipo,
+                    'fecha': str(recordatorio.fecha_programada)
+                }
+            })
+        except Recordatorio.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Recordatorio no encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -362,6 +434,13 @@ def obtener_horas_ocupadas(request):
         })
     except Veterinario.DoesNotExist:
         return Response({'error': 'Veterinario no encontrado'}, status=404)
+
+@login_required(login_url='login')
+def lista_veterinarios(request):
+    veterinarios = Veterinario.objects.all()
+    return render(request, 'petcare/veterinarios.html', {
+        'veterinarios': veterinarios
+    })
 
 # --- API VIEWSETS (DRF) ---
 

@@ -29,7 +29,7 @@
   <form id="form-cita">
     {% csrf_token %}
 
-    <!-- OPCIÓN A: PACIENTE ANTIGUO (Seleccionar de la lista de PostgreSQL) -->
+    <!-- OPCIÓN A: PACIENTE ANTIGUO -->
     <div id="seccion-paciente-antiguo">
       <div class="form-group">
         <label for="select_mascota">Mascota Registrada:</label>
@@ -44,7 +44,7 @@
       </div>
     </div>
 
-    <!-- OPCIÓN B: PACIENTE NUEVO (Campos de entrada manual) -->
+    <!-- OPCIÓN B: PACIENTE NUEVO -->
     <div id="seccion-paciente-nuevo" style="display: none; grid-template-columns: 1fr 1fr; gap: 1rem;">
       <div class="form-group">
         <label for="nuevo_tutor_nombre">Nombre del Tutor:</label>
@@ -79,7 +79,7 @@
       </div>
     </div>
 
-    <!-- CAMPOS DE LA CITA (Veterinario, Fecha y Hora) -->
+    <!-- CAMPOS DE LA CITA -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
       <div class="form-group">
         <label for="select_veterinario">Seleccionar Profesional:</label>
@@ -152,64 +152,83 @@
   </table>
 </div>
 
-<!-- Módulo Automatizado de Recordatorios -->
-<div class="card" id="modulo-recordatorios">
-  <h3>Módulo Automatizado de Recordatorios Preventivos</h3>
-  <form id="form-recordatorio" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: end;">
-    {% csrf_token %}
-    <div class="form-group" style="margin-bottom: 0;">
-      <label for="rec_mascota">Mascota / Paciente:</label>
-      <select id="rec_mascota" class="form-control" style="width: 100%; padding: 0.5rem;" required>
-        <option value="" disabled selected>-- Seleccione Mascota --</option>
-        {% for m in mascotas %}
-          <option value="{{ m.id }}">{{ m.nombre }} (Tutor: {{ m.tutor.nombre }})</option>
-        {% endfor %}
-      </select>
-    </div>
+<!-- Módulo Automatizado de Recordatorios Preventivos (ÚNICO) -->
+<div class="card shadow-sm border-0 p-4 mb-4">
+    <h4 class="fw-bold mb-3">Módulo Automatizado de Recordatorios Preventivos</h4>
+    
+    <!-- Formulario de Recordatorio -->
+    <form id="form-recordatorio" class="row g-3 align-items-end mb-4">
+        {% csrf_token %}
+        <div class="col-md-4">
+            <label class="form-label font-weight-bold">Mascota / Paciente:</label>
+            <!-- Desplegable Mascota en Módulo de Recordatorios -->
+          <select id="rec-mascota" class="form-select" required>
+              <option value="" disabled selected>-- Seleccione Mascota --</option>
+              {% for mascota in mascotas %}
+                  {% if mascota.estado|lower == 'activo' or not mascota.estado %}
+                      <option value="{{ mascota.id }}">{{ mascota.nombre }} (Tutor: {{ mascota.tutor.nombre }})</option>
+                  {% endif %}
+              {% endfor %}
+          </select>
+        </div>
 
-    <div class="form-group" style="margin-bottom: 0;">
-      <label for="rec_tipo">Tipo de Recordatorio:</label>
-      <select id="rec_tipo" class="form-control" style="width: 100%; padding: 0.5rem;" required>
-        <option value="Vacunación Periodicidad">Vacunación Periodicidad</option>
-        <option value="Control Periódico / Sano">Control Periódico / Sano</option>
-        <option value="Desparasitación Interna/Externa">Desparasitación Interna/Externa</option>
-      </select>
-    </div>
+        <div class="col-md-4">
+            <label class="form-label font-weight-bold">Tipo de Recordatorio:</label>
+            <select id="rec-tipo" class="form-select" required>
+                <option value="Desparasitación Interna/Externa">Desparasitación Interna/Externa</option>
+                <option value="Vacunación Anual">Vacunación Anual</option>
+                <option value="Control Sano">Control Sano</option>
+                <option value="Chequeo Exámenes">Chequeo Exámenes</option>
+            </select>
+        </div>
 
-    <div class="form-group" style="margin-bottom: 0;">
-      <label for="rec_fecha">Fecha Programada:</label>
-      <input type="date" id="rec_fecha" class="form-control" style="width: 100%; padding: 0.45rem;" required>
-    </div>
+        <div class="col-md-3">
+            <label class="form-label font-weight-bold">Fecha Programada:</label>
+            <input type="date" id="rec-fecha" class="form-control" required>
+        </div>
 
-    <button type="submit" class="btn" style="background-color: #d69e2e; color: white;">Programar Recordatorio</button>
-  </form>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-warning text-white fw-bold w-100" style="background-color: #d99b26; border: none;">
+                Programar Recordatorio
+            </button>
+        </div>
+    </form>
 
-  <table style="width: 100%; border-collapse: collapse; margin-top: 1.5rem;">
-    <thead>
-      <tr style="background-color: #edf2f7; text-align: left;">
-        <th style="padding: 0.75rem;">Mascota</th>
-        <th style="padding: 0.75rem;">Tipo</th>
-        <th style="padding: 0.75rem;">Fecha Programada</th>
-        <th style="padding: 0.75rem;">Estado Notificación</th>
-      </tr>
-    </thead>
-    <tbody id="tabla-recordatorios-body">
-      {% for rec in recordatorios %}
-      <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 0.75rem;">{{ rec.mascota.nombre }}</td>
-        <td style="padding: 0.75rem;">{{ rec.tipo }}</td>
-        <td style="padding: 0.75rem;">{{ rec.fecha_programada|date:"Y-m-d" }}</td>
-        <td style="padding: 0.75rem;">
-          <span style="color: #d69e2e; font-weight: bold;">Programado (WhatsApp/Correo)</span>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="4" style="text-align: center; padding: 1rem;">No hay recordatorios programados.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <!-- Tabla Dinámica de Recordatorios -->
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Mascota</th>
+                <th>Tipo</th>
+                <th>Fecha Programada</th>
+                <th>Estado Notificación</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-recordatorios-body">
+            {% for rec in recordatorios %}
+                <tr id="row-rec-{{ rec.id }}">
+                    <td>{{ rec.mascota.nombre }}</td>
+                    <td>{{ rec.tipo }}</td>
+                    <td>{{ rec.fecha_programada|date:"Y-m-d" }}</td>
+                    <td class="fw-bold" style="color: #d99b26;">
+                        {{ rec.estado_notificacion|default:rec.estado|default:"Programado (WhatsApp/Correo)" }}
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-danger btn-eliminar-rec" data-id="{{ rec.id }}">
+                            Borrar
+                        </button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr id="row-empty-rec">
+                    <td colspan="5" class="text-center text-muted">No hay recordatorios programados.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 </div>
 {% endblock %}
 
@@ -222,9 +241,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const seccionNuevo = document.getElementById('seccion-paciente-nuevo');
   const selectMascota = document.getElementById('select_mascota');
   const formCita = document.getElementById('form-cita');
-  const tablaBody = document.getElementById('tabla-citas-body');
-  const selectVet = document.getElementById('select-veterinario'); // ID del select del profesional
-  const inputFechaHora = document.querySelector('input[type="datetime-local"]');
+  const tablaCitasBody = document.getElementById('tabla-citas-body');
+  const selectVet = document.getElementById('select_veterinario');
+  const inputFechaHora = document.getElementById('fecha_hora');
+  
+  const formRecordatorio = document.getElementById('form-recordatorio');
+  const tablaRecordatoriosBody = document.getElementById('tabla-recordatorios-body');
 
   function getCookie(name) {
     let cookieValue = null;
@@ -241,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return cookieValue;
   }
 
-  // Alternar entre Paciente Antiguo y Nuevo
+  // 1. Alternar entre Paciente Antiguo y Nuevo
   if (radioAntiguo && radioNuevo) {
     radioAntiguo.addEventListener('change', () => {
       seccionAntiguo.style.display = 'block';
@@ -256,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Agendar Cita
+  // 2. Agendar Cita
   if (formCita) {
     formCita.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -264,8 +286,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let payload = {
         tipo_paciente: esNuevo ? 'NUEVO' : 'ANTIGUO',
-        veterinario_id: document.getElementById('select_veterinario').value,
-        fecha_hora: document.getElementById('fecha_hora').value,
+        veterinario_id: selectVet.value,
+        fecha_hora: inputFechaHora.value,
         motivo: document.getElementById('motivo_consulta').value
       };
 
@@ -296,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (response.ok) {
-          alert('Cita reservada con éxito');
+          alert('¡Cita reservada con éxito!');
           window.location.reload();
         } else {
           const err = await response.json();
@@ -308,9 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Cambiar Estado (Confirmar / Cancelar)
-  if (tablaBody) {
-    tablaBody.addEventListener('click', async (e) => {
+  // 3. Cambiar Estado de Cita (Confirmar / Cancelar)
+  if (tablaCitasBody) {
+    tablaCitasBody.addEventListener('click', async (e) => {
       if (e.target.classList.contains('btn-estado')) {
         const citaId = e.target.dataset.id;
         const nuevoEstado = e.target.dataset.estado;
@@ -328,118 +350,156 @@ document.addEventListener('DOMContentLoaded', () => {
           if (response.ok) {
             window.location.reload();
           } else {
-            alert('Error al actualizar el estado');
+            alert('Error al actualizar el estado de la cita');
           }
         } catch (err) {
           console.error('Error al actualizar estado de cita:', err);
         }
       }
-      if (response.ok) {
-  alert('¡Cita reservada con éxito!');
-  // Forzar la recarga desde el servidor limpiando valores en caché
-  window.location.href = window.location.pathname + '?t=' + new Date().getTime();
-} else {
-  const err = await response.json();
-  alert('Error al reservar la cita: ' + JSON.stringify(err));
-}
     });
   }
-});
-// Agregar dentro del bloque DOMContentLoaded en index.html
-const formRecordatorio = document.getElementById('form-recordatorio');
 
-if (formRecordatorio) {
-  formRecordatorio.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  // 4. Programar Recordatorio Preventivo Asíncrono
+  if (formRecordatorio) {
+    formRecordatorio.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-    const payload = {
-      mascota_id: document.getElementById('rec_mascota').value,
-      tipo: document.getElementById('rec_tipo').value,
-      fecha: document.getElementById('rec_fecha').value
-    };
+      const mascotaId = document.getElementById('rec-mascota').value;
+      const tipo = document.getElementById('rec-tipo').value;
+      const fecha = document.getElementById('rec-fecha').value;
 
-    try {
-      const response = await fetch('/api/recordatorios/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(payload)
-      });
+      try {
+        const response = await fetch("{% url 'crear_recordatorio_api' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({
+            mascota_id: mascotaId,
+            tipo: tipo,
+            fecha: fecha
+          })
+        });
 
-      if (response.ok) {
-        alert('Recordatorio programado exitosamente');
-        window.location.reload();
-      } else {
-        const err = await response.json();
-        alert('Error al programar recordatorio: ' + JSON.stringify(err));
-      }
-    } catch (error) {
-      console.error('Error al enviar recordatorio:', error);
-    }
-  });
-}
-document.getElementById('select-veterinario').addEventListener('change', async function() {
-    const vetId = this.value;
-    if (!vetId) return;
-
-    const response = await fetch(`/api/veterinarios/${vetId}/disponibilidad/`);
-    if (response.ok) {
         const data = await response.json();
-        
-        // Ajustar el min y max del input time según la disponibilidad configurada
-        const inputHora = document.getElementById('input-hora-cita');
-        inputHora.min = data.hora_inicio;
-        inputHora.max = data.hora_fin;
-        
-        alert(`Horario de atención: ${data.hora_inicio} a ${data.hora_fin}`);
-    }
-});
-inputFechaHora.addEventListener('change', async function() {
-    const vetId = selectVet.value;
-    const fechaHoraValor = this.value; // Formato: YYYY-MM-DDTHH:MM
 
-    if (!vetId) {
+        if (response.ok && data.status === 'success') {
+          const emptyRow = document.getElementById('row-empty-rec');
+          if (emptyRow) emptyRow.remove();
+
+          const newRow = `
+            <tr id="row-rec-${data.recordatorio.id}">
+              <td>${data.recordatorio.mascota_nombre}</td>
+              <td>${data.recordatorio.tipo}</td>
+              <td>${data.recordatorio.fecha}</td>
+              <td class="fw-bold" style="color: #d99b26;">${data.recordatorio.estado}</td>
+              <td>
+                <button type="button" class="btn btn-sm btn-danger btn-eliminar-rec" data-id="${data.recordatorio.id}">
+                  Borrar
+                </button>
+              </td>
+            </tr>
+          `;
+          tablaRecordatoriosBody.insertAdjacentHTML('afterbegin', newRow);
+          formRecordatorio.reset();
+        } else {
+          alert('Error al programar recordatorio: ' + (data.message || 'Error desconocido'));
+        }
+      } catch (error) {
+        console.error('Error al enviar recordatorio:', error);
+        alert('Ocurrió un error al procesar el recordatorio.');
+      }
+    });
+  }
+
+  // 5. Manejo de borrado asíncrono de recordatorios
+  if (tablaRecordatoriosBody) {
+    tablaRecordatoriosBody.addEventListener('click', async (e) => {
+      const btnEliminar = e.target.closest('.btn-eliminar-rec');
+      if (btnEliminar) {
+        const recId = btnEliminar.dataset.id;
+
+        if (confirm('¿Estás seguro de eliminar este recordatorio?')) {
+          try {
+            const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+            const response = await fetch(`/api/recordatorios/${recId}/eliminar/`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+              }
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.status === 'success') {
+              const fila = document.getElementById(`row-rec-${recId}`);
+              if (fila) {
+                fila.remove();
+              } else {
+                window.location.reload();
+              }
+            } else {
+              alert('Error al borrar: ' + (data.message || 'No se pudo eliminar.'));
+            }
+          } catch (error) {
+            console.error('Error en la petición de borrado:', error);
+            alert('Ocurrió un problema de conexión al intentar borrar.');
+          }
+        }
+      }
+    });
+  }
+
+  // 6. Validaciones de Horario y Disponibilidad de Veterinarios
+  if (inputFechaHora && selectVet) {
+    inputFechaHora.addEventListener('change', async function() {
+      const vetId = selectVet.value;
+      const fechaHoraValor = this.value;
+
+      if (!vetId) {
         alert('Por favor selecciona primero un profesional.');
         this.value = '';
         return;
-    }
+      }
 
-    if (!fechaHoraValor) return;
+      if (!fechaHoraValor) return;
 
-    const [fecha, hora] = fechaHoraValor.split('T');
-    
-    // Validar día de la semana (1 = Lunes, 7 = Domingo)
-    const fechaObj = new Date(fecha + 'T00:00:00');
-    let diaSemana = fechaObj.getDay(); 
-    diaSemana = diaSemana === 0 ? 7 : diaSemana; // Convertir Domingo de 0 a 7
+      const [fecha, hora] = fechaHoraValor.split('T');
+      const fechaObj = new Date(fecha + 'T00:00:00');
+      let diaSemana = fechaObj.getDay(); 
+      diaSemana = diaSemana === 0 ? 7 : diaSemana;
 
-    const response = await fetch(`/api/disponibilidad-horas/?vet_id=${vetId}&fecha=${fecha}`);
-    if (response.ok) {
-        const data = await response.json();
+      try {
+        const response = await fetch(`/api/disponibilidad-horas/?vet_id=${vetId}&fecha=${fecha}`);
+        if (response.ok) {
+          const data = await response.json();
 
-        // 1. Validar si el profesional atiende ese día
-        if (!data.dias_permitidos.includes(diaSemana)) {
+          if (data.dias_permitidos && !data.dias_permitidos.includes(diaSemana)) {
             alert('El profesional seleccionado no atiende el día seleccionado.');
             this.value = '';
             return;
-        }
+          }
 
-        // 2. Validar rango de horario del profesional
-        if (hora < data.hora_inicio || hora > data.hora_fin) {
+          if (data.hora_inicio && data.hora_fin && (hora < data.hora_inicio || hora > data.hora_fin)) {
             alert(`El horario de atención para este profesional es de ${data.hora_inicio} a ${data.hora_fin}.`);
             this.value = '';
             return;
-        }
+          }
 
-        // 3. Validar solapamiento con citas existentes
-        if (data.horas_ocupadas.includes(hora)) {
+          if (data.horas_ocupadas && data.horas_ocupadas.includes(hora)) {
             alert(`La hora ${hora} ya se encuentra reservada para este profesional. Por favor elige otro horario.`);
             this.value = '';
             return;
+          }
         }
-    }
+      } catch (err) {
+        console.error('Error al verificar disponibilidad:', err);
+      }
+    });
+  }
 });
 </script>
 {% endblock %}
