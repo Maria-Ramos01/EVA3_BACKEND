@@ -44,9 +44,9 @@ def login_view(request):
         password_req = request.POST.get('password')
         user = authenticate(request, username=username_req, password=password_req)
         
-        if user is not None:
-            login(request, user)
-            return redirect('index')
+        if user.is_active:  # Verificar que esté activo
+                login(request, user)
+                return redirect('index')
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')
     

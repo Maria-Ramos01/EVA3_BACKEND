@@ -1,7 +1,7 @@
 Secretarios:
 
 - Fer
-holachao123
+pocoyo2003
 
 Para guardar y aplicar los cambios realizados en el código dentro de tu instancia de **AWS EC2**, debes ejecutar una serie de comandos en la consola terminal de tu servidor (conectada vía SSH o Session Manager).
 
