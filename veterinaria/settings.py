@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-farlg-un%!$3^-#x3lz6&)tr_i3c5-j+c0a-q32oarr48)dwc3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # En producción final, reemplaza '*' por tu IP Elástica de AWS
+ALLOWED_HOSTS = ['54.198.16.20','https://qtoen22y5c.execute-api.us-east-1.amazonaws.com','amazonaws.com']  # En producción final, reemplaza '*' por tu IP Elástica de AWS
 
 # Application definition
 
